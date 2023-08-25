@@ -1,0 +1,43 @@
+Build Zeppelin image manually
+To build your own Zeppelin image, first build Zeppelin project with -Pbuild-distr flag.
+
+$ mvn package -DskipTests -Pbuild-distr <your flags>
+Binary package will be created under zeppelin-distribution/target directory. Move created package file under scripts/docker/zeppelin/bin/ directory.
+
+$ mv zeppelin-distribution/target/zeppelin-*.tar.gz scripts/docker/zeppelin/bin/
+scripts/docker/zeppelin/bin/Dockerfile downloads package from internet. Modify the file to add package from filesystem.
+
+...
+
+# Find following section and comment out
+#RUN echo "$LOG_TAG Download Zeppelin binary" && \
+#    wget -O /tmp/zeppelin-${Z_VERSION}-bin-all.tgz http://archive.apache.org/dist/zeppelin/zeppelin-${Z_VERSION}/zeppelin-${Z_VERSION}-bin-all.tgz && \
+#    tar -zxvf /tmp/zeppelin-${Z_VERSION}-bin-all.tgz && \
+#    rm -rf /tmp/zeppelin-${Z_VERSION}-bin-all.tgz && \
+#    mv /zeppelin-${Z_VERSION}-bin-all ${ZEPPELIN_HOME}
+
+# Add following lines right after the commented line above
+ADD zeppelin-${Z_VERSION}.tar.gz /
+RUN ln -s /zeppelin-${Z_VERSION} /zeppelin
+...
+Then build docker image.
+
+# configure docker env, if you're using minikube
+$ eval $(minikube docker-env) 
+
+# change directory
+$ cd scripts/docker/zeppelin/bin/
+
+# build image. Replace <tag>.
+$ docker build -t <tag> .
+
+
+
+
+-----------------------------------
+1) ./mvnw clean -X package -Pbuild-distr -Dskiptests
+2) mv zeppelin-distribution/target/zeppelin-*.tar.gz scripts/docker/zeppelin/bin/ 
+3) cd scripts/docker/zeppelin/bin/
+4) docker build -t <tag> .
+5) push the image to artifactories
+ 
